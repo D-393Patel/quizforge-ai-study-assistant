@@ -2,6 +2,18 @@
 
 QuizForge turns free-form study notes into a validated, interactive multiple-choice quiz. It is built around the less glamorous—but most important—part of an AI feature: treating model output as untrusted data and failing without losing the user's work.
 
+![QuizForge generation form](docs/screenshots/generation-form.png)
+
+## Product tour
+
+| Interactive quiz | Results and explanations |
+| --- | --- |
+| ![Active QuizForge quiz](docs/screenshots/active-quiz.png) | ![QuizForge results](docs/screenshots/results.png) |
+
+| Question challenge | Failure recovery | Mobile layout |
+| --- | --- | --- |
+| ![Question challenged as ambiguous](docs/screenshots/challenged-question.png) | ![Malformed response handled safely](docs/screenshots/failure-recovery.png) | ![QuizForge mobile layout](docs/screenshots/mobile.png) |
+
 ## Features
 
 - Real Gemini integration through a server-only API route
