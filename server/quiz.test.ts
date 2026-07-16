@@ -1,0 +1,10 @@
+import { describe, expect, it } from 'vitest';
+import { ModelResponseError, parseModelResponse } from './quiz';
+
+const raw = JSON.stringify({ title: 'Test', questions: [{ question: 'Valid question?', options: ['Yes', 'No'], correctIndex: 0, explanation: 'Yes.' }] });
+describe('parseModelResponse', () => {
+  it('removes code fences and supplies IDs', () => expect(parseModelResponse('```json\n' + raw + '\n```').questions[0].id).toBe('q-1'));
+  it('rejects empty output', () => expect(() => parseModelResponse(' ')).toThrow(ModelResponseError));
+  it('rejects malformed JSON', () => expect(() => parseModelResponse('{ nope')).toThrow('malformed JSON'));
+  it('does not guess an invalid correct answer', () => expect(() => parseModelResponse(raw.replace('"correctIndex":0', '"correctIndex":4'))).toThrow('invalid structure'));
+});
