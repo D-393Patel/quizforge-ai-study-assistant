@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { generateQuiz } from '../services/quizApi';
-import type { GenerationRequest, Quiz } from '../schemas/quiz';
+import type { GenerationResult } from '../services/quizApi';
+import type { GenerationRequest } from '../schemas/quiz';
 
 type State =
   | { status: 'idle' }
   | { status: 'loading'; slow: boolean }
-  | { status: 'success'; quiz: Quiz; mock: boolean }
+  | ({ status: 'success' } & GenerationResult)
   | { status: 'error'; message: string };
 
 export function useQuizGeneration() {

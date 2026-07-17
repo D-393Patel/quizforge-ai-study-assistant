@@ -6,11 +6,12 @@ type Props = {
   quiz: Quiz;
   difficulty: string;
   mock?: boolean;
+  fallbackUsed?: boolean;
   onStartQuiz: () => void;
   onExit: () => void;
 };
 
-export function FlashcardDeck({ quiz, difficulty, mock = false, onStartQuiz, onExit }: Props) {
+export function FlashcardDeck({ quiz, difficulty, mock = false, fallbackUsed = false, onStartQuiz, onExit }: Props) {
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const card = quiz.flashcards[index];
@@ -40,7 +41,7 @@ export function FlashcardDeck({ quiz, difficulty, mock = false, onStartQuiz, onE
         <span className="progress-copy">{index + 1} / {quiz.flashcards.length}</span>
       </div>
       <div className="progress-track"><span style={{ width: `${((index + 1) / quiz.flashcards.length) * 100}%` }} /></div>
-      <div className="quality-strip"><span><BrainCircuit size={14} /> {quiz.flashcards.length} concept cards</span><span><Sparkles size={14} /> {difficulty} quiz next</span>{mock && <span className="demo-badge">Demo data</span>}</div>
+      <div className="quality-strip"><span><BrainCircuit size={14} /> {quiz.flashcards.length} concept cards</span><span><Sparkles size={14} /> {difficulty} quiz next</span>{mock && <span className="demo-badge">Demo data</span>}{fallbackUsed && <span className="fallback-badge">Backup provider used</span>}</div>
 
       <button className={`flashcard ${flipped ? 'flipped' : ''}`} onClick={() => setFlipped(!flipped)} aria-label={`${flipped ? 'Answer' : 'Question'}: ${flipped ? card.back : card.front}. Click to flip.`}>
         <span className="flashcard-side">{flipped ? 'Explanation' : 'Concept'}</span>

@@ -2,6 +2,7 @@ import express, { type ErrorRequestHandler } from 'express';
 import { createServer as createViteServer } from 'vite';
 import { generationRequestSchema } from '../src/schemas/quiz';
 import { createQuiz, mockQuiz, ModelResponseError } from './quiz';
+import { createQuizWithOpenRouter, OpenRouterError } from './openrouter';
 
 // Node does not load local environment files automatically. Keep secrets on the
 // server and allow a normal `npm start` to use the documented `.env` setup.
@@ -29,11 +30,23 @@ app.post('/api/generate-quiz', async (request, response) => {
   const timeout = setTimeout(() => { timedOut = true; controller.abort(); }, 60_000);
   try {
     const useMock = process.env.MOCK_AI === 'true';
-    const quiz = useMock ? mockQuiz(parsed.data) : await createQuiz(parsed.data, controller.signal);
-    return response.json({ quiz, mock: useMock });
+    if (useMock) return response.json({ quiz: mockQuiz(parsed.data), mock: true, provider: 'mock', fallbackUsed: false });
+    try {
+      const quiz = await createQuiz(parsed.data, controller.signal);
+      return response.json({ quiz, mock: false, provider: 'gemini', fallbackUsed: false });
+    } catch (geminiError) {
+      const status = typeof geminiError === 'object' && geminiError && 'status' in geminiError ? Number(geminiError.status) : 0;
+      const canFallback = process.env.AI_FALLBACK_ENABLED === 'true'
+        && Boolean(process.env.OPENROUTER_API_KEY)
+        && (geminiError instanceof ModelResponseError || status === 429 || status >= 500);
+      if (!canFallback || controller.signal.aborted) throw geminiError;
+      const quiz = await createQuizWithOpenRouter(parsed.data, controller.signal);
+      return response.json({ quiz, mock: false, provider: 'openrouter', fallbackUsed: true });
+    }
   } catch (error) {
     if (timedOut) return response.status(504).json({ error: 'The AI took too long to respond. Please try again.' });
     if (error instanceof ModelResponseError) return response.status(502).json({ error: `${error.message} Please try again.` });
+    if (error instanceof OpenRouterError) return response.status(502).json({ error: 'Both AI providers are temporarily unavailable. Your notes are preserved—please retry shortly.' });
     if (error instanceof Error && error.message === 'CONFIGURATION') return response.status(503).json({ error: 'The AI service is not configured. Add GEMINI_API_KEY or enable MOCK_AI.' });
     const status = typeof error === 'object' && error && 'status' in error ? Number(error.status) : 500;
     if (status === 429) return response.status(429).json({ error: 'The AI provider is busy. Wait a moment and retry.' });

@@ -30,6 +30,7 @@ QuizForge turns free-form study notes into a validated, interactive multiple-cho
 - Visible generation summary showing question count, difficulty, and validation status
 - Explicit loading, slow, empty, validation, network, timeout, rate-limit, and provider-error states
 - `AbortController` plus monotonically increasing request IDs so stale responses cannot win
+- Bounded Gemini retries and an optional schema-validated OpenRouter fallback
 - Responsive, keyboard-accessible interface with visible focus and screen-reader status messages
 - Opt-in mock mode for evaluators without an API key
 - Automated tests for invalid AI shapes, malformed JSON, scoring, and retries
@@ -52,6 +53,16 @@ Add a Gemini API key to `.env` for real generation:
 GEMINI_API_KEY=your_key_here
 GEMINI_MODEL=gemini-2.5-flash
 ```
+
+An optional OpenRouter fallback can keep generation available during temporary Gemini outages:
+
+```env
+OPENROUTER_API_KEY=your_key_here
+OPENROUTER_MODEL=google/gemma-4-26b-a4b-it:free
+AI_FALLBACK_ENABLED=true
+```
+
+Gemini remains the primary provider. OpenRouter is called only after retryable Gemini failures such as `429` or `5xx`. Its response passes through the same parser and Zod schema, and the UI discloses when the backup provider was used.
 
 To evaluate the complete UI without a key, set `MOCK_AI=true`. Mock mode is explicitly labelled and never silently replaces an unsuccessful model call.
 

@@ -10,9 +10,10 @@ import { makeRetryQuiz, type AnswerMap, type ChallengeMap } from './utils/quiz';
 import { loadSession, SESSION_KEY } from './utils/session';
 import './styles.css';
 
-type QuizScreen = { name: 'quiz'; quiz: Quiz; difficulty: string; mock: boolean; attempt: number; answers: AnswerMap; challenges: ChallengeMap };
-type ResultsScreen = { name: 'results'; quiz: Quiz; difficulty: string; mock: boolean; answers: AnswerMap; challenges: ChallengeMap; attempt: number };
-type LearnScreen = { name: 'learn'; quiz: Quiz; difficulty: string; mock: boolean };
+type Provider = 'gemini' | 'openrouter' | 'mock';
+type QuizScreen = { name: 'quiz'; quiz: Quiz; difficulty: string; mock: boolean; provider: Provider; fallbackUsed: boolean; attempt: number; answers: AnswerMap; challenges: ChallengeMap };
+type ResultsScreen = { name: 'results'; quiz: Quiz; difficulty: string; mock: boolean; provider: Provider; fallbackUsed: boolean; answers: AnswerMap; challenges: ChallengeMap; attempt: number };
+type LearnScreen = { name: 'learn'; quiz: Quiz; difficulty: string; mock: boolean; provider: Provider; fallbackUsed: boolean };
 type Screen = { name: 'home' } | LearnScreen | QuizScreen | ResultsScreen;
 
 const flashcardPreview: Quiz = {
@@ -28,7 +29,7 @@ const flashcardPreview: Quiz = {
 
 function initialScreen(): Screen {
   if (import.meta.env.DEV && new URLSearchParams(window.location.search).get('preview') === 'flashcards') {
-    return { name: 'learn', quiz: flashcardPreview, difficulty: 'medium', mock: true };
+    return { name: 'learn', quiz: flashcardPreview, difficulty: 'medium', mock: true, provider: 'mock', fallbackUsed: false };
   }
   return { name: 'home' };
 }
@@ -42,7 +43,7 @@ export default function App() {
   async function requestQuiz(request: GenerationRequest) { lastRequest.current = request; setScreen({ name: 'home' }); await generate(request); }
   useEffect(() => {
     if (state.status === 'success') {
-      const base = { quiz: state.quiz, difficulty: lastRequest.current?.difficulty ?? 'medium', mock: state.mock };
+      const base = { quiz: state.quiz, difficulty: lastRequest.current?.difficulty ?? 'medium', mock: state.mock, provider: state.provider, fallbackUsed: state.fallbackUsed };
       setScreen(state.quiz.flashcards.length ? { name: 'learn', ...base } : { name: 'quiz', ...base, attempt: 1, answers: {}, challenges: {} });
     }
   }, [state]);
@@ -55,9 +56,9 @@ export default function App() {
   }, []);
 
   function newQuiz() { reset(); lastRequest.current = null; localStorage.removeItem(SESSION_KEY); setSavedSession(null); setScreen({ name: 'home' }); }
-  if (screen.name === 'learn') return <FlashcardDeck quiz={screen.quiz} difficulty={screen.difficulty} mock={screen.mock} onExit={newQuiz} onStartQuiz={() => setScreen({ name: 'quiz', quiz: screen.quiz, difficulty: screen.difficulty, mock: screen.mock, attempt: 1, answers: {}, challenges: {} })} />;
-  if (screen.name === 'quiz') return <QuizPlayer quiz={screen.quiz} difficulty={screen.difficulty} mock={screen.mock} attempt={screen.attempt} initialAnswers={screen.answers} initialChallenges={screen.challenges} onProgress={saveProgress} onExit={newQuiz} onSubmit={(answers, challenges) => setScreen({ name: 'results', quiz: screen.quiz, difficulty: screen.difficulty, mock: screen.mock, answers, challenges, attempt: screen.attempt })} />;
-  if (screen.name === 'results') return <QuizResults quiz={screen.quiz} answers={screen.answers} challenges={screen.challenges} onNew={newQuiz} onRetry={() => setScreen({ name: 'quiz', quiz: makeRetryQuiz(screen.quiz, screen.answers, screen.challenges), difficulty: screen.difficulty, mock: screen.mock, answers: {}, challenges: {}, attempt: screen.attempt + 1 })} />;
+  if (screen.name === 'learn') return <FlashcardDeck quiz={screen.quiz} difficulty={screen.difficulty} mock={screen.mock} fallbackUsed={screen.fallbackUsed} onExit={newQuiz} onStartQuiz={() => setScreen({ name: 'quiz', quiz: screen.quiz, difficulty: screen.difficulty, mock: screen.mock, provider: screen.provider, fallbackUsed: screen.fallbackUsed, attempt: 1, answers: {}, challenges: {} })} />;
+  if (screen.name === 'quiz') return <QuizPlayer quiz={screen.quiz} difficulty={screen.difficulty} mock={screen.mock} fallbackUsed={screen.fallbackUsed} attempt={screen.attempt} initialAnswers={screen.answers} initialChallenges={screen.challenges} onProgress={saveProgress} onExit={newQuiz} onSubmit={(answers, challenges) => setScreen({ name: 'results', quiz: screen.quiz, difficulty: screen.difficulty, mock: screen.mock, provider: screen.provider, fallbackUsed: screen.fallbackUsed, answers, challenges, attempt: screen.attempt })} />;
+  if (screen.name === 'results') return <QuizResults quiz={screen.quiz} answers={screen.answers} challenges={screen.challenges} onNew={newQuiz} onRetry={() => setScreen({ name: 'quiz', quiz: makeRetryQuiz(screen.quiz, screen.answers, screen.challenges), difficulty: screen.difficulty, mock: screen.mock, provider: screen.provider, fallbackUsed: screen.fallbackUsed, answers: {}, challenges: {}, attempt: screen.attempt + 1 })} />;
 
   return <div className="app-shell">
     <header className="site-header"><a className="brand" href="#top" aria-label="QuizForge home"><span><BrainCircuit size={21} /></span>QuizForge</a><span className="header-pill"><ShieldCheck size={15} /> Built for focused practice</span></header>
