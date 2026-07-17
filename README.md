@@ -51,7 +51,7 @@ Add a Gemini API key to `.env` for real generation:
 
 ```env
 GEMINI_API_KEY=your_key_here
-GEMINI_MODEL=gemini-2.5-flash
+GEMINI_MODEL=gemini-3-flash-preview
 ```
 
 An optional OpenRouter fallback can keep generation available during temporary Gemini outages:
