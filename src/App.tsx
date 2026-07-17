@@ -15,9 +15,27 @@ type ResultsScreen = { name: 'results'; quiz: Quiz; difficulty: string; mock: bo
 type LearnScreen = { name: 'learn'; quiz: Quiz; difficulty: string; mock: boolean };
 type Screen = { name: 'home' } | LearnScreen | QuizScreen | ResultsScreen;
 
+const flashcardPreview: Quiz = {
+  title: 'Photosynthesis fundamentals',
+  summary: 'Essential concepts before the quiz.',
+  flashcards: [
+    { id: 'preview-1', front: 'What is photosynthesis?', back: 'The process plants use to convert light energy into chemical energy stored in sugars.' },
+    { id: 'preview-2', front: 'Where does photosynthesis happen?', back: 'Mainly in chloroplasts, which contain the pigment chlorophyll.' },
+    { id: 'preview-3', front: 'What happens in light-dependent reactions?', back: 'They capture sunlight, split water, release oxygen, and produce ATP and NADPH.' },
+  ],
+  questions: [{ id: 'preview-q1', question: 'Where does photosynthesis occur?', options: ['Nucleus', 'Chloroplast'], correctIndex: 1, explanation: 'It occurs mainly in chloroplasts.' }],
+};
+
+function initialScreen(): Screen {
+  if (import.meta.env.DEV && new URLSearchParams(window.location.search).get('preview') === 'flashcards') {
+    return { name: 'learn', quiz: flashcardPreview, difficulty: 'medium', mock: true };
+  }
+  return { name: 'home' };
+}
+
 export default function App() {
   const { state, generate, cancel, reset } = useQuizGeneration();
-  const [screen, setScreen] = useState<Screen>({ name: 'home' });
+  const [screen, setScreen] = useState<Screen>(initialScreen);
   const [savedSession, setSavedSession] = useState<LearnScreen | QuizScreen | ResultsScreen | null>(() => loadSession() as LearnScreen | QuizScreen | ResultsScreen | null);
   const lastRequest = useRef<GenerationRequest | null>(null);
 

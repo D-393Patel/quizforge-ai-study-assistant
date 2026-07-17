@@ -6,6 +6,10 @@ QuizForge turns free-form study notes into a validated, interactive multiple-cho
 
 ## Product tour
 
+### Learn concepts before testing recall
+
+![AI-generated QuizForge flashcards](docs/screenshots/flashcards.png)
+
 | Interactive quiz | Results and explanations |
 | --- | --- |
 | ![Active QuizForge quiz](docs/screenshots/active-quiz.png) | ![QuizForge results](docs/screenshots/results.png) |
@@ -69,6 +73,8 @@ After deployment, add the public URL near the top of this README and test one re
 ## Demo and interview
 
 The [interview guide](docs/INTERVIEW_GUIDE.md) contains a 90-second recording script, architecture diagram, explanations for the main reliability decisions, and likely live-coding changes.
+
+During local development, `/?preview=flashcards` opens a deterministic flashcard screen for visual QA and screenshots. This preview is guarded by Vite's development flag and is not available in production builds.
 
 ## Architecture and reliability
 
