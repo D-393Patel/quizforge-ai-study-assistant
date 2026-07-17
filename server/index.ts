@@ -27,7 +27,7 @@ app.post('/api/generate-quiz', async (request, response) => {
 
   const controller = new AbortController();
   let timedOut = false;
-  const timeout = setTimeout(() => { timedOut = true; controller.abort(); }, 60_000);
+  const timeout = setTimeout(() => { timedOut = true; controller.abort(); }, 90_000);
   try {
     const useMock = process.env.MOCK_AI === 'true';
     if (useMock) return response.json({ quiz: mockQuiz(parsed.data), mock: true, provider: 'mock', fallbackUsed: false });

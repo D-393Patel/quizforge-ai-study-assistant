@@ -47,7 +47,7 @@ export class OpenRouterError extends Error {
   constructor(message: string, public status: number) { super(message); }
 }
 
-export async function createQuizWithOpenRouter(input: GenerationRequest, signal: AbortSignal): Promise<Quiz> {
+async function requestQuiz(input: GenerationRequest, signal: AbortSignal): Promise<Quiz> {
   const key = process.env.OPENROUTER_API_KEY;
   if (!key) throw new OpenRouterError('OpenRouter is not configured.', 503);
 
@@ -89,4 +89,17 @@ export async function createQuizWithOpenRouter(input: GenerationRequest, signal:
   const content = body?.choices?.[0]?.message?.content;
   if (!content) throw new OpenRouterError('OpenRouter returned an empty response.', 502);
   return parseModelResponse(content);
+}
+
+export async function createQuizWithOpenRouter(input: GenerationRequest, signal: AbortSignal): Promise<Quiz> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      return await requestQuiz(input, signal);
+    } catch (error) {
+      lastError = error;
+      if (signal.aborted || attempt === 1) throw error;
+    }
+  }
+  throw lastError;
 }

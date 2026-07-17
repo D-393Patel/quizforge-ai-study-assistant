@@ -61,14 +61,47 @@ export function parseModelResponse(raw: string): Quiz {
   try { value = JSON.parse(withoutFence); }
   catch { throw new ModelResponseError('The model returned malformed JSON.'); }
 
-  // Missing IDs are safe to repair; answer content and indexes are never guessed.
-  if (value && typeof value === 'object' && Array.isArray((value as { questions?: unknown }).questions)) {
-    (value as { questions: Array<Record<string, unknown>> }).questions.forEach((question, index) => {
-      if (!question.id && typeof question === 'object') question.id = `q-${index + 1}`;
-    });
+  // Repair only mechanical defects. Factual answer content is never invented.
+  if (value && typeof value === 'object') {
+    const output = value as { flashcards?: unknown; questions?: unknown };
+    if (Array.isArray(output.flashcards)) {
+      output.flashcards.forEach((card, index) => {
+        if (card && typeof card === 'object') (card as Record<string, unknown>).id = `card-${index + 1}`;
+      });
+    }
+    if (Array.isArray(output.questions)) {
+      output.questions.forEach((item, index) => {
+        if (!item || typeof item !== 'object') return;
+        const question = item as Record<string, unknown>;
+        question.id = `q-${index + 1}`;
+        if (typeof question.correctIndex === 'string' && /^\d+$/.test(question.correctIndex)) {
+          question.correctIndex = Number(question.correctIndex);
+        }
+        if (Array.isArray(question.options) && Number.isInteger(question.correctIndex)) {
+          const original = question.options as unknown[];
+          const correctOption = original[question.correctIndex as number];
+          const correctNormalized = typeof correctOption === 'string' ? correctOption.trim().toLocaleLowerCase() : null;
+          const unique = original.filter((option, optionIndex) =>
+            typeof option !== 'string' || original.findIndex((candidate) =>
+              typeof candidate === 'string' && candidate.trim().toLocaleLowerCase() === option.trim().toLocaleLowerCase()
+            ) === optionIndex
+          );
+          const remappedIndex = correctNormalized === null
+            ? unique.indexOf(correctOption)
+            : unique.findIndex((option) => typeof option === 'string' && option.trim().toLocaleLowerCase() === correctNormalized);
+          if (remappedIndex >= 0) {
+            question.options = unique;
+            question.correctIndex = remappedIndex;
+          }
+        }
+      });
+    }
   }
   const parsed = quizSchema.safeParse(value);
-  if (!parsed.success) throw new ModelResponseError('The model returned a quiz with an invalid structure.');
+  if (!parsed.success) {
+    console.warn('AI response validation failed:', parsed.error.issues.map(({ path, message }) => `${path.join('.')}: ${message}`).join('; '));
+    throw new ModelResponseError('The model returned a study set with an invalid structure.');
+  }
   return parsed.data;
 }
 
