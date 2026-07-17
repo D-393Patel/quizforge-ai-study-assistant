@@ -1,15 +1,18 @@
 import { useRef, useState, type ChangeEvent, type FormEvent } from 'react';
-import { ArrowRight, ChevronDown, FileText, ShieldCheck, Sparkles, Upload, X } from 'lucide-react';
+import { ArrowRight, BookOpen, ChevronDown, FileText, ListChecks, ShieldCheck, Sparkles, Upload, X } from 'lucide-react';
 import type { GenerationRequest } from '../schemas/quiz';
+
+export type StudyMode = 'flashcards' | 'quiz';
 
 const EXAMPLE = `Photosynthesis converts light energy into chemical energy in plants. It occurs mainly in chloroplasts. During the light-dependent reactions, chlorophyll absorbs sunlight and produces ATP and NADPH. The Calvin cycle uses carbon dioxide, ATP, and NADPH to create sugars. Oxygen is released when water molecules are split.`;
 
-type Props = { onSubmit: (request: GenerationRequest) => void; disabled?: boolean; initialRequest?: GenerationRequest | null };
+type Props = { onSubmit: (request: GenerationRequest, studyMode: StudyMode) => void; disabled?: boolean; initialRequest?: GenerationRequest | null; initialMode?: StudyMode };
 
-export function QuizForm({ onSubmit, disabled, initialRequest }: Props) {
+export function QuizForm({ onSubmit, disabled, initialRequest, initialMode = 'flashcards' }: Props) {
   const [notes, setNotes] = useState(initialRequest?.notes ?? '');
   const [difficulty, setDifficulty] = useState<GenerationRequest['difficulty']>(initialRequest?.difficulty ?? 'medium');
   const [questionCount, setQuestionCount] = useState<5 | 10 | 15>(initialRequest?.questionCount ?? 5);
+  const [studyMode, setStudyMode] = useState<StudyMode>(initialMode);
   const [debugFailure, setDebugFailure] = useState<GenerationRequest['debugFailure']>(undefined);
   const [showEvaluatorTools, setShowEvaluatorTools] = useState(false);
   const [fileName, setFileName] = useState('');
@@ -23,7 +26,7 @@ export function QuizForm({ onSubmit, disabled, initialRequest }: Props) {
     event.preventDefault();
     setTouched(true);
     if (trimmedLength < 20 || trimmedLength > 12_000) return;
-    onSubmit({ notes: notes.trim(), difficulty, questionCount, debugFailure });
+    onSubmit({ notes: notes.trim(), difficulty, questionCount, debugFailure }, studyMode);
   }
 
   async function importFile(event: ChangeEvent<HTMLInputElement>) {
@@ -60,6 +63,19 @@ export function QuizForm({ onSubmit, disabled, initialRequest }: Props) {
       <fieldset><legend>Difficulty</legend><div className="segmented">{(['easy', 'medium', 'hard'] as const).map((level) => <label key={level}><input type="radio" name="difficulty" value={level} checked={difficulty === level} onChange={() => setDifficulty(level)} disabled={disabled} /><span>{level}</span></label>)}</div></fieldset>
       <fieldset><legend>Questions</legend><div className="segmented">{([5, 10, 15] as const).map((count) => <label key={count}><input type="radio" name="count" value={count} checked={questionCount === count} onChange={() => setQuestionCount(count)} disabled={disabled} /><span>{count}</span></label>)}</div></fieldset>
     </div>
+    <fieldset className="study-mode">
+      <legend>How would you like to begin?</legend>
+      <div className="mode-options">
+        <label className={studyMode === 'flashcards' ? 'selected' : ''}>
+          <input type="radio" name="study-mode" value="flashcards" checked={studyMode === 'flashcards'} onChange={() => setStudyMode('flashcards')} disabled={disabled} />
+          <BookOpen size={19} /><span><strong>Flashcards first</strong><small>Review concepts, then take the quiz</small></span>
+        </label>
+        <label className={studyMode === 'quiz' ? 'selected' : ''}>
+          <input type="radio" name="study-mode" value="quiz" checked={studyMode === 'quiz'} onChange={() => setStudyMode('quiz')} disabled={disabled} />
+          <ListChecks size={19} /><span><strong>Start with quiz</strong><small>Jump directly into questions</small></span>
+        </label>
+      </div>
+    </fieldset>
     {import.meta.env.DEV && <div className="evaluator-tools">
       <button className="evaluator-toggle" type="button" aria-expanded={showEvaluatorTools} onClick={() => setShowEvaluatorTools((visible) => !visible)}><ShieldCheck size={15} /> Test reliability <ChevronDown className={showEvaluatorTools ? 'open' : ''} size={15} /></button>
       {showEvaluatorTools && <label className="failure-control"><span><strong>Evaluator tools</strong>Simulate an unreliable AI response</span>
@@ -68,7 +84,7 @@ export function QuizForm({ onSubmit, disabled, initialRequest }: Props) {
         </select><small>Development only. Production builds always use the configured AI provider.</small>
       </label>}
     </div>}
-    <button className="primary-button generate-button" disabled={disabled} type="submit"><Sparkles size={18} aria-hidden /> Generate my quiz <ArrowRight size={18} aria-hidden /></button>
-    <p className="privacy-note">Your notes are sent to the configured AI provider only to generate this quiz.</p>
+    <button className="primary-button generate-button" disabled={disabled} type="submit"><Sparkles size={18} aria-hidden /> Create my study set <ArrowRight size={18} aria-hidden /></button>
+    <p className="privacy-note">One AI request creates both flashcards and a quiz. You can switch between them anytime.</p>
   </form>;
 }

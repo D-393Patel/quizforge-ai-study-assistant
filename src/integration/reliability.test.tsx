@@ -53,7 +53,7 @@ describe('AI reliability integration', () => {
     fireEvent.change(notes, { target: { value: request.notes } });
     fireEvent.click(screen.getByDisplayValue('hard'));
     fireEvent.click(screen.getByDisplayValue('10'));
-    fireEvent.click(screen.getByRole('button', { name: 'Generate my quiz' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Create my study set' }));
     await screen.findByText('We couldn’t create that quiz.');
     expect(screen.getByLabelText('Study notes or topic')).toHaveValue(request.notes);
     expect(screen.getByDisplayValue('hard')).toBeChecked();

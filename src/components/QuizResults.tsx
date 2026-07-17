@@ -1,10 +1,10 @@
-import { ArrowRight, Check, Flag, RotateCcw, X } from 'lucide-react';
+import { ArrowRight, BookOpen, Check, Flag, RotateCcw, X } from 'lucide-react';
 import type { Quiz } from '../schemas/quiz';
 import { getIncorrectQuestions, scoreQuiz, type AnswerMap, type ChallengeMap } from '../utils/quiz';
 
-type Props = { quiz: Quiz; answers: AnswerMap; challenges: ChallengeMap; onRetry: () => void; onNew: () => void };
+type Props = { quiz: Quiz; answers: AnswerMap; challenges: ChallengeMap; onRetry: () => void; onReviewFlashcards: () => void; onNew: () => void };
 
-export function QuizResults({ quiz, answers, challenges, onRetry, onNew }: Props) {
+export function QuizResults({ quiz, answers, challenges, onRetry, onReviewFlashcards, onNew }: Props) {
   const score = scoreQuiz(quiz.questions, answers, challenges);
   const incorrect = getIncorrectQuestions(quiz.questions, answers, challenges);
   const challengedCount = Object.keys(challenges).length;
@@ -15,7 +15,7 @@ export function QuizResults({ quiz, answers, challenges, onRetry, onNew }: Props
     <section className="score-card">
       <span className="eyebrow">Quiz complete</span>
       <div className="score-row"><div><h1>{message}</h1><p>You answered {score} of {scoredCount} scored questions correctly.{challengedCount ? ` ${challengedCount} challenged.` : ''}</p></div><div className="score-ring" aria-label={`Score ${percentage} percent`}><strong>{percentage}%</strong><span>score</span></div></div>
-      <div className="results-actions">{incorrect.length > 0 && <button className="primary-button" onClick={onRetry}><RotateCcw size={17} /> Retry {incorrect.length} missed</button>}<button className="secondary-button" onClick={onNew}>Create new quiz <ArrowRight size={17} /></button></div>
+      <div className="results-actions">{incorrect.length > 0 && <button className="primary-button" onClick={onRetry}><RotateCcw size={17} /> Retry {incorrect.length} missed</button>}{quiz.flashcards.length > 0 && <button className="secondary-button" onClick={onReviewFlashcards}><BookOpen size={17} /> Review flashcards</button>}<button className="secondary-button" onClick={onNew}>New study set <ArrowRight size={17} /></button></div>
     </section>
     <section className="review-section" aria-labelledby="review-title"><div className="section-heading"><div><span className="eyebrow">Answer review</span><h2 id="review-title">Learn from every question</h2></div><span>{score} correct · {incorrect.length} missed</span></div>
       <div className="review-list">{quiz.questions.map((question, questionIndex) => {
