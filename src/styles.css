@@ -90,6 +90,7 @@ select { font: inherit; }
 .resume-banner div { flex:1 }.resume-banner p { margin:2px 0 0;color:var(--muted);font-size:12px }.discard-button { border:0;background:transparent;color:var(--muted);padding:8px }
 .quality-strip { display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:13px;color:var(--green);font-size:11px;text-transform:capitalize }
 .quality-strip span { display:flex;align-items:center;gap:4px }
+.quality-strip .demo-badge { color:#8a5625;background:#fff3df;border:1px solid #eccb99;border-radius:999px;padding:3px 8px;font-weight:700 }
 .challenge-row { display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:18px;padding-top:16px;border-top:1px dashed var(--line);font-size:12px }
 .challenge-row label { display:flex;align-items:center;gap:8px;color:var(--muted) }.challenge-row select { min-height:36px;max-width:210px;border:1px solid var(--line);border-radius:8px;background:var(--paper);padding:0 9px;color:var(--ink) }.challenge-row > span { color:#875738;font-weight:700 }
 .keyboard-hint { display:flex;align-items:center;justify-content:center;gap:6px;margin:18px 0 -15px;color:#93958c;font-size:11px }

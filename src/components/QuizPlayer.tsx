@@ -3,9 +3,9 @@ import { ArrowLeft, ArrowRight, Check, Flag, Keyboard } from 'lucide-react';
 import type { Quiz } from '../schemas/quiz';
 import { challengeReasons, type AnswerMap, type ChallengeMap, type ChallengeReason } from '../utils/quiz';
 
-type Props = { quiz: Quiz; difficulty: string; attempt?: number; initialAnswers?: AnswerMap; initialChallenges?: ChallengeMap; onProgress: (answers: AnswerMap, challenges: ChallengeMap) => void; onSubmit: (answers: AnswerMap, challenges: ChallengeMap) => void; onExit: () => void };
+type Props = { quiz: Quiz; difficulty: string; mock?: boolean; attempt?: number; initialAnswers?: AnswerMap; initialChallenges?: ChallengeMap; onProgress: (answers: AnswerMap, challenges: ChallengeMap) => void; onSubmit: (answers: AnswerMap, challenges: ChallengeMap) => void; onExit: () => void };
 
-export function QuizPlayer({ quiz, difficulty, attempt = 1, initialAnswers = {}, initialChallenges = {}, onProgress, onSubmit, onExit }: Props) {
+export function QuizPlayer({ quiz, difficulty, mock = false, attempt = 1, initialAnswers = {}, initialChallenges = {}, onProgress, onSubmit, onExit }: Props) {
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<AnswerMap>(initialAnswers);
   const [challenges, setChallenges] = useState<ChallengeMap>(initialChallenges);
@@ -34,7 +34,7 @@ export function QuizPlayer({ quiz, difficulty, attempt = 1, initialAnswers = {},
     <section className="quiz-card" aria-labelledby="quiz-title">
       <div className="quiz-topline"><div><span className="eyebrow">{attempt > 1 ? `Retry ${attempt - 1}` : 'Quiz in progress'}</span><h1 id="quiz-title">{quiz.title}</h1></div><span className="progress-copy">{index + 1} / {quiz.questions.length}</span></div>
       <div className="progress-track" aria-label={`${answered} of ${quiz.questions.length} answered`}><span style={{ width: `${(answered / quiz.questions.length) * 100}%` }} /></div>
-      <div className="quality-strip"><span><Check size={14} /> {quiz.questions.length} questions</span><span><Check size={14} /> Response validated</span><span><Check size={14} /> {difficulty} difficulty</span></div>
+      <div className="quality-strip"><span><Check size={14} /> {quiz.questions.length} questions</span><span><Check size={14} /> Response validated</span><span><Check size={14} /> {difficulty} difficulty</span>{mock && <span className="demo-badge">Demo data · not generated from your notes</span>}</div>
       <fieldset className="question-fieldset">
         <legend className="question-title" tabIndex={-1}>{question.question}</legend>
         <div className="option-list">{question.options.map((option, optionIndex) => {

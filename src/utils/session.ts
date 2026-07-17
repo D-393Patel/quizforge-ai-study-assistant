@@ -5,6 +5,7 @@ export type SavedSession = {
   name: 'quiz' | 'results';
   quiz: Quiz;
   difficulty: string;
+  mock: boolean;
   attempt: number;
   answers: AnswerMap;
   challenges: ChallengeMap;
@@ -18,6 +19,6 @@ export function loadSession(): SavedSession | null {
     if (!value || (value.name !== 'quiz' && value.name !== 'results')) return null;
     const quiz = quizSchema.safeParse(value.quiz);
     if (!quiz.success) return null;
-    return { name: value.name, quiz: quiz.data, difficulty: String(value.difficulty ?? 'medium'), attempt: Number(value.attempt) || 1, answers: value.answers ?? {}, challenges: value.challenges ?? {} };
+    return { name: value.name, quiz: quiz.data, difficulty: String(value.difficulty ?? 'medium'), mock: Boolean(value.mock), attempt: Number(value.attempt) || 1, answers: value.answers ?? {}, challenges: value.challenges ?? {} };
   } catch { localStorage.removeItem(SESSION_KEY); return null; }
 }

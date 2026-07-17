@@ -9,8 +9,8 @@ import { makeRetryQuiz, type AnswerMap, type ChallengeMap } from './utils/quiz';
 import { loadSession, SESSION_KEY } from './utils/session';
 import './styles.css';
 
-type QuizScreen = { name: 'quiz'; quiz: Quiz; difficulty: string; attempt: number; answers: AnswerMap; challenges: ChallengeMap };
-type ResultsScreen = { name: 'results'; quiz: Quiz; difficulty: string; answers: AnswerMap; challenges: ChallengeMap; attempt: number };
+type QuizScreen = { name: 'quiz'; quiz: Quiz; difficulty: string; mock: boolean; attempt: number; answers: AnswerMap; challenges: ChallengeMap };
+type ResultsScreen = { name: 'results'; quiz: Quiz; difficulty: string; mock: boolean; answers: AnswerMap; challenges: ChallengeMap; attempt: number };
 type Screen = { name: 'home' } | QuizScreen | ResultsScreen;
 
 export default function App() {
@@ -21,7 +21,7 @@ export default function App() {
 
   async function requestQuiz(request: GenerationRequest) { lastRequest.current = request; setScreen({ name: 'home' }); await generate(request); }
   useEffect(() => {
-    if (state.status === 'success') setScreen({ name: 'quiz', quiz: state.quiz, difficulty: lastRequest.current?.difficulty ?? 'medium', attempt: 1, answers: {}, challenges: {} });
+    if (state.status === 'success') setScreen({ name: 'quiz', quiz: state.quiz, difficulty: lastRequest.current?.difficulty ?? 'medium', mock: state.mock, attempt: 1, answers: {}, challenges: {} });
   }, [state]);
   useEffect(() => {
     if (screen.name !== 'home') { localStorage.setItem(SESSION_KEY, JSON.stringify(screen)); setSavedSession(screen); }
@@ -32,8 +32,8 @@ export default function App() {
   }, []);
 
   function newQuiz() { reset(); lastRequest.current = null; localStorage.removeItem(SESSION_KEY); setSavedSession(null); setScreen({ name: 'home' }); }
-  if (screen.name === 'quiz') return <QuizPlayer quiz={screen.quiz} difficulty={screen.difficulty} attempt={screen.attempt} initialAnswers={screen.answers} initialChallenges={screen.challenges} onProgress={saveProgress} onExit={newQuiz} onSubmit={(answers, challenges) => setScreen({ name: 'results', quiz: screen.quiz, difficulty: screen.difficulty, answers, challenges, attempt: screen.attempt })} />;
-  if (screen.name === 'results') return <QuizResults quiz={screen.quiz} answers={screen.answers} challenges={screen.challenges} onNew={newQuiz} onRetry={() => setScreen({ name: 'quiz', quiz: makeRetryQuiz(screen.quiz, screen.answers, screen.challenges), difficulty: screen.difficulty, answers: {}, challenges: {}, attempt: screen.attempt + 1 })} />;
+  if (screen.name === 'quiz') return <QuizPlayer quiz={screen.quiz} difficulty={screen.difficulty} mock={screen.mock} attempt={screen.attempt} initialAnswers={screen.answers} initialChallenges={screen.challenges} onProgress={saveProgress} onExit={newQuiz} onSubmit={(answers, challenges) => setScreen({ name: 'results', quiz: screen.quiz, difficulty: screen.difficulty, mock: screen.mock, answers, challenges, attempt: screen.attempt })} />;
+  if (screen.name === 'results') return <QuizResults quiz={screen.quiz} answers={screen.answers} challenges={screen.challenges} onNew={newQuiz} onRetry={() => setScreen({ name: 'quiz', quiz: makeRetryQuiz(screen.quiz, screen.answers, screen.challenges), difficulty: screen.difficulty, mock: screen.mock, answers: {}, challenges: {}, attempt: screen.attempt + 1 })} />;
 
   return <div className="app-shell">
     <header className="site-header"><a className="brand" href="#top" aria-label="QuizForge home"><span><BrainCircuit size={21} /></span>QuizForge</a><span className="header-pill"><ShieldCheck size={15} /> Built for focused practice</span></header>
