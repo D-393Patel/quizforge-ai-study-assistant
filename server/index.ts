@@ -37,6 +37,7 @@ app.post('/api/generate-quiz', async (request, response) => {
     if (error instanceof Error && error.message === 'CONFIGURATION') return response.status(503).json({ error: 'The AI service is not configured. Add GEMINI_API_KEY or enable MOCK_AI.' });
     const status = typeof error === 'object' && error && 'status' in error ? Number(error.status) : 500;
     if (status === 429) return response.status(429).json({ error: 'The AI provider is busy. Wait a moment and retry.' });
+    if (status === 503) return response.status(503).json({ error: 'Gemini is experiencing high demand right now. Wait a moment and retry—your notes are preserved.' });
     return response.status(502).json({ error: 'The AI provider could not generate a quiz. Please try again.' });
   } finally { clearTimeout(timeout); }
 });
