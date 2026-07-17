@@ -3,7 +3,7 @@
 ## 90-second demo script
 
 1. **0–10s — Problem:** “QuizForge turns unstructured notes into validated, interactive practice—not a chatbot.”
-2. **10–25s — Input:** Upload a `.txt` note file, choose difficulty, and generate with real Gemini.
+2. **10–25s — Input:** Upload a `.txt` note file, choose counts and difficulty, and generate with real Gemini.
 3. **25–35s — Learn:** Flip an AI-generated concept card and move into the quiz.
 4. **35–50s — Interaction:** Answer with keys `1–4`, navigate with arrows, and challenge one ambiguous question.
 5. **50–65s — Results:** Show explanations, adjusted scoring, and retry only missed questions.
@@ -20,8 +20,12 @@ flowchart LR
     Form -->|"Validated request"| API["Express API"]
     API -->|"Server-only key"| Gemini["Gemini structured output"]
     Gemini --> Parse["Safe JSON parse"]
+    API -->|"Retryable failure"| OpenRouter["OpenRouter fallback"]
+    OpenRouter --> Parse
     Parse --> Zod["Runtime schema validation"]
-    Zod --> Quiz["Interactive quiz"]
+    Zod --> Counts["Exact-count check"]
+    Counts --> Cards["Flip-through flashcards"]
+    Counts --> Quiz["Interactive quiz"]
     Quiz --> Challenge["Challenge questionable output"]
     Quiz --> Results["Score, review, retry"]
     Quiz --> Storage["Validated local recovery"]

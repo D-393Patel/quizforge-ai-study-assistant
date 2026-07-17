@@ -1,6 +1,6 @@
 # QuizForge
 
-QuizForge turns free-form study notes into a validated, interactive multiple-choice quiz. It is built around the less glamorous—but most important—part of an AI feature: treating model output as untrusted data and failing without losing the user's work.
+QuizForge turns free-form study notes into validated flashcards and an interactive multiple-choice quiz. It is built around the less glamorous—but most important—part of an AI feature: treating model output as untrusted data and failing without losing the user's work.
 
 ![QuizForge generation form](docs/screenshots/generation-form.png)
 
@@ -24,6 +24,7 @@ QuizForge turns free-form study notes into a validated, interactive multiple-cho
 - Strict Zod validation on both request and response boundaries
 - Interactive quiz navigation, scoring, explanations, and retry-only-missed flow
 - AI-generated concept flashcards with flip, keyboard navigation, and a learn-before-quiz flow
+- Independent flashcard and question counts with an enforced 20-item reliability budget
 - Challenge questionable AI output and exclude it transparently from scoring
 - Validated local session recovery and keyboard shortcuts (`1–4`, arrow keys)
 - Development-only failure simulator for malformed, empty, timed-out, and failed responses
@@ -73,6 +74,7 @@ npm start       # client and API development server
 npm run build   # type-check and create the production bundle
 npm test        # run the test suite once
 npm run dev     # start with server file watching
+npm run lint    # run ESLint
 ```
 
 ## Deploy on Render
@@ -89,9 +91,9 @@ During local development, `/?preview=flashcards` opens a deterministic flashcard
 
 ## Architecture and reliability
 
-The browser posts notes and quiz settings to `POST /api/generate-quiz`. The Express server validates the request, asks Gemini for concept flashcards and quiz questions in one JSON-schema response, enforces a 60-second timeout, safely removes an optional JSON code fence, parses the response, and validates the result with Zod. The React UI only receives trusted study data.
+The browser posts notes and study-set settings to `POST /api/generate-quiz`. The Express server validates the request, asks Gemini for concept flashcards and quiz questions in one JSON-schema response, enforces a 90-second timeout, safely removes an optional JSON code fence, parses the response, validates it with Zod, and verifies the requested item counts. The React UI only receives trusted study data.
 
-Missing question IDs are the only semantic normalization because IDs do not affect answer correctness. The app refuses to guess missing answers, repair invalid indexes, or alter option content. Malformed, empty, or structurally invalid responses become retryable errors.
+The parser performs only mechanically safe normalization: regenerating display IDs, converting an integer index encoded as a string, and deduplicating text-identical options while remapping the same correct answer. It never invents an answer or guesses an out-of-range index. Malformed, empty, count-mismatched, or structurally invalid responses become retryable errors.
 
 On the client, starting a request aborts the previous fetch. Every request also receives an increasing local ID; state is updated only if the completed request is still the newest. The ID check provides protection even if a transport or test double ignores abort signals.
 
@@ -99,7 +101,7 @@ The notes are marked as untrusted study material in the system prompt, and the m
 
 ## Testing failure cases
 
-The test suite covers malformed JSON, empty responses, incorrect answer indexes, duplicate options and IDs, safe ID normalization, scoring, and creation of a retry quiz without mutating the original.
+The test suite covers malformed JSON, empty responses, incorrect answer indexes, duplicate options and IDs, safe normalization, exact item counts, stale-response protection, session recovery, scoring, and creation of a retry quiz without mutating the original.
 
 For a manual timeout check, use browser network throttling or pause the API request and confirm the slow-state copy appears after six seconds. Starting another generation cancels the previous request; late responses are ignored.
 
@@ -110,15 +112,16 @@ I used OpenAI Codex to help plan and implement the initial architecture, failure
 ## Known limitations
 
 - Model-generated questions can still contain factual mistakes despite structural validation.
-- Input is limited to 12,000 characters and quizzes to 15 questions; there is no chunking for long documents.
-- Progress is not persisted across devices or browser refreshes.
+- Input is limited to 12,000 characters, each content type is limited to 15 items, and the combined study set is capped at 20 items for reliable free-provider generation.
+- Progress persists in the current browser only; it does not sync across browsers or devices.
 - Rate limits and availability depend on the configured Gemini account and model.
+- OpenRouter free-model latency and availability can vary; the UI exposes slow and retry states.
 - The mock fixture is based on photosynthesis and is intended only for interface evaluation.
 
 ## Time spent
 
-Initial implementation: approximately 7.5 hours, including product planning, frontend, AI boundary, responsive styling, tests, and documentation. Replace this line with the submitter's actual tracked time before submission.
+Approximately 8 hours, including product planning, frontend implementation, AI integration, responsive styling, reliability tests, and documentation.
 
 ## Next steps
 
-With more time, I would add browser-session persistence, integration tests against a fake HTTP server for overlapping requests, and an optional flashcard view. Streaming is deliberately deferred because partially streamed JSON increases complexity without improving the assignment's core reliability goals.
+With more time, I would add cross-device session sync, PDF extraction, and provider telemetry that does not expose note contents. Streaming is deliberately deferred because partially streamed JSON increases complexity without improving the assignment's core reliability goals.
