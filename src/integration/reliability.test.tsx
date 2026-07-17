@@ -9,6 +9,7 @@ import { loadSession } from '../utils/session';
 const request: GenerationRequest = {
   notes: 'These are sufficiently detailed notes about cellular respiration and ATP production.',
   difficulty: 'medium',
+  flashcardCount: 5,
   questionCount: 5,
 };
 
@@ -52,12 +53,12 @@ describe('AI reliability integration', () => {
     const notes = screen.getByLabelText('Study notes or topic');
     fireEvent.change(notes, { target: { value: request.notes } });
     fireEvent.click(screen.getByDisplayValue('hard'));
-    fireEvent.click(screen.getByDisplayValue('10'));
+    fireEvent.click(document.querySelector('input[name="question-count"][value="10"]') as HTMLInputElement);
     fireEvent.click(screen.getByRole('button', { name: 'Create my study set' }));
     await screen.findByText('We couldn’t create that study set.');
     expect(screen.getByLabelText('Study notes or topic')).toHaveValue(request.notes);
     expect(screen.getByDisplayValue('hard')).toBeChecked();
-    expect(screen.getByDisplayValue('10')).toBeChecked();
+    expect(document.querySelector('input[name="question-count"][value="10"]')).toBeChecked();
   });
 
   it('rejects unsupported note files without replacing notes', async () => {

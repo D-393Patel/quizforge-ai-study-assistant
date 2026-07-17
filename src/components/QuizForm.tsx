@@ -11,6 +11,7 @@ type Props = { onSubmit: (request: GenerationRequest, studyMode: StudyMode) => v
 export function QuizForm({ onSubmit, disabled, initialRequest, initialMode = 'flashcards' }: Props) {
   const [notes, setNotes] = useState(initialRequest?.notes ?? '');
   const [difficulty, setDifficulty] = useState<GenerationRequest['difficulty']>(initialRequest?.difficulty ?? 'medium');
+  const [flashcardCount, setFlashcardCount] = useState<5 | 10 | 15>(initialRequest?.flashcardCount ?? 5);
   const [questionCount, setQuestionCount] = useState<5 | 10 | 15>(initialRequest?.questionCount ?? 5);
   const [studyMode, setStudyMode] = useState<StudyMode>(initialMode);
   const [debugFailure, setDebugFailure] = useState<GenerationRequest['debugFailure']>(undefined);
@@ -22,11 +23,21 @@ export function QuizForm({ onSubmit, disabled, initialRequest, initialMode = 'fl
   const trimmedLength = notes.trim().length;
   const error = touched && trimmedLength < 20 ? 'Add at least 20 characters so the AI has enough context.' : '';
 
+  function chooseFlashcardCount(count: 5 | 10 | 15) {
+    setFlashcardCount(count);
+    if (count + questionCount > 20) setQuestionCount(5);
+  }
+
+  function chooseQuestionCount(count: 5 | 10 | 15) {
+    setQuestionCount(count);
+    if (count + flashcardCount > 20) setFlashcardCount(5);
+  }
+
   function submit(event: FormEvent) {
     event.preventDefault();
     setTouched(true);
     if (trimmedLength < 20 || trimmedLength > 12_000) return;
-    onSubmit({ notes: notes.trim(), difficulty, questionCount, debugFailure }, studyMode);
+    onSubmit({ notes: notes.trim(), difficulty, flashcardCount, questionCount, debugFailure }, studyMode);
   }
 
   async function importFile(event: ChangeEvent<HTMLInputElement>) {
@@ -61,8 +72,10 @@ export function QuizForm({ onSubmit, disabled, initialRequest, initialMode = 'fl
     <div className="field-meta"><span id="notes-error" className="field-error" role="alert">{error}</span><span id="notes-help">{notes.length.toLocaleString()} / 12,000</span></div>
     <div className="controls-row">
       <fieldset><legend>Difficulty</legend><div className="segmented">{(['easy', 'medium', 'hard'] as const).map((level) => <label key={level}><input type="radio" name="difficulty" value={level} checked={difficulty === level} onChange={() => setDifficulty(level)} disabled={disabled} /><span>{level}</span></label>)}</div></fieldset>
-      <fieldset><legend>Questions</legend><div className="segmented">{([5, 10, 15] as const).map((count) => <label key={count}><input type="radio" name="count" value={count} checked={questionCount === count} onChange={() => setQuestionCount(count)} disabled={disabled} /><span>{count}</span></label>)}</div></fieldset>
+      <fieldset><legend>Flashcards</legend><div className="segmented">{([5, 10, 15] as const).map((count) => <label key={count}><input type="radio" name="flashcard-count" value={count} checked={flashcardCount === count} onChange={() => chooseFlashcardCount(count)} disabled={disabled} /><span>{count}</span></label>)}</div></fieldset>
+      <fieldset><legend>Questions</legend><div className="segmented">{([5, 10, 15] as const).map((count) => <label key={count}><input type="radio" name="question-count" value={count} checked={questionCount === count} onChange={() => chooseQuestionCount(count)} disabled={disabled} /><span>{count}</span></label>)}</div></fieldset>
     </div>
+    <p className="item-limit">{flashcardCount} flashcards + {questionCount} questions · 20-item reliability limit</p>
     <fieldset className="study-mode">
       <legend>How would you like to begin?</legend>
       <div className="mode-options">

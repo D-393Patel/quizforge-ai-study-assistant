@@ -41,8 +41,13 @@ export const quizSchema = z.object({
 export const generationRequestSchema = z.object({
   notes: z.string().trim().min(20, 'Please provide at least 20 characters of study material.').max(12_000),
   difficulty: z.enum(['easy', 'medium', 'hard']),
+  flashcardCount: z.union([z.literal(5), z.literal(10), z.literal(15)]),
   questionCount: z.union([z.literal(5), z.literal(10), z.literal(15)]),
   debugFailure: z.enum(['malformed', 'empty', 'timeout', 'server']).optional(),
+}).superRefine((request, context) => {
+  if (request.flashcardCount + request.questionCount > 20) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ['flashcardCount'], message: 'Choose no more than 20 combined flashcards and questions.' });
+  }
 });
 
 export type Quiz = z.infer<typeof quizSchema>;
