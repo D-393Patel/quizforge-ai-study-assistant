@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { BrainCircuit, History, ShieldCheck, TimerReset, TriangleAlert, X } from 'lucide-react';
 import { QuizForm } from './components/QuizForm';
+import { FlashcardDeck } from './components/FlashcardDeck';
 import { QuizPlayer } from './components/QuizPlayer';
 import { QuizResults } from './components/QuizResults';
 import { useQuizGeneration } from './hooks/useQuizGeneration';
@@ -11,17 +12,21 @@ import './styles.css';
 
 type QuizScreen = { name: 'quiz'; quiz: Quiz; difficulty: string; mock: boolean; attempt: number; answers: AnswerMap; challenges: ChallengeMap };
 type ResultsScreen = { name: 'results'; quiz: Quiz; difficulty: string; mock: boolean; answers: AnswerMap; challenges: ChallengeMap; attempt: number };
-type Screen = { name: 'home' } | QuizScreen | ResultsScreen;
+type LearnScreen = { name: 'learn'; quiz: Quiz; difficulty: string; mock: boolean };
+type Screen = { name: 'home' } | LearnScreen | QuizScreen | ResultsScreen;
 
 export default function App() {
   const { state, generate, cancel, reset } = useQuizGeneration();
   const [screen, setScreen] = useState<Screen>({ name: 'home' });
-  const [savedSession, setSavedSession] = useState<QuizScreen | ResultsScreen | null>(() => loadSession() as QuizScreen | ResultsScreen | null);
+  const [savedSession, setSavedSession] = useState<LearnScreen | QuizScreen | ResultsScreen | null>(() => loadSession() as LearnScreen | QuizScreen | ResultsScreen | null);
   const lastRequest = useRef<GenerationRequest | null>(null);
 
   async function requestQuiz(request: GenerationRequest) { lastRequest.current = request; setScreen({ name: 'home' }); await generate(request); }
   useEffect(() => {
-    if (state.status === 'success') setScreen({ name: 'quiz', quiz: state.quiz, difficulty: lastRequest.current?.difficulty ?? 'medium', mock: state.mock, attempt: 1, answers: {}, challenges: {} });
+    if (state.status === 'success') {
+      const base = { quiz: state.quiz, difficulty: lastRequest.current?.difficulty ?? 'medium', mock: state.mock };
+      setScreen(state.quiz.flashcards.length ? { name: 'learn', ...base } : { name: 'quiz', ...base, attempt: 1, answers: {}, challenges: {} });
+    }
   }, [state]);
   useEffect(() => {
     if (screen.name !== 'home') { localStorage.setItem(SESSION_KEY, JSON.stringify(screen)); setSavedSession(screen); }
@@ -32,6 +37,7 @@ export default function App() {
   }, []);
 
   function newQuiz() { reset(); lastRequest.current = null; localStorage.removeItem(SESSION_KEY); setSavedSession(null); setScreen({ name: 'home' }); }
+  if (screen.name === 'learn') return <FlashcardDeck quiz={screen.quiz} difficulty={screen.difficulty} mock={screen.mock} onExit={newQuiz} onStartQuiz={() => setScreen({ name: 'quiz', quiz: screen.quiz, difficulty: screen.difficulty, mock: screen.mock, attempt: 1, answers: {}, challenges: {} })} />;
   if (screen.name === 'quiz') return <QuizPlayer quiz={screen.quiz} difficulty={screen.difficulty} mock={screen.mock} attempt={screen.attempt} initialAnswers={screen.answers} initialChallenges={screen.challenges} onProgress={saveProgress} onExit={newQuiz} onSubmit={(answers, challenges) => setScreen({ name: 'results', quiz: screen.quiz, difficulty: screen.difficulty, mock: screen.mock, answers, challenges, attempt: screen.attempt })} />;
   if (screen.name === 'results') return <QuizResults quiz={screen.quiz} answers={screen.answers} challenges={screen.challenges} onNew={newQuiz} onRetry={() => setScreen({ name: 'quiz', quiz: makeRetryQuiz(screen.quiz, screen.answers, screen.challenges), difficulty: screen.difficulty, mock: screen.mock, answers: {}, challenges: {}, attempt: screen.attempt + 1 })} />;
 

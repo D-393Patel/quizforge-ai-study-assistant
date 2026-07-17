@@ -18,9 +18,18 @@ export const quizQuestionSchema = z.object({
   }
 });
 
+export const flashcardSchema = z.object({
+  id: z.string().trim().min(1).max(80),
+  front: z.string().trim().min(1).max(500),
+  back: z.string().trim().min(1).max(1_000),
+}).strict();
+
 export const quizSchema = z.object({
   title: z.string().trim().min(1).max(150),
   summary: z.string().trim().max(500).optional(),
+  // Empty is accepted only for saved quizzes created before flashcards existed.
+  // New Gemini responses require this field through the provider JSON schema.
+  flashcards: z.array(flashcardSchema).max(15).default([]),
   questions: z.array(quizQuestionSchema).min(1).max(15),
 }).strict().superRefine((quiz, context) => {
   const ids = quiz.questions.map(({ id }) => id);
@@ -38,4 +47,5 @@ export const generationRequestSchema = z.object({
 
 export type Quiz = z.infer<typeof quizSchema>;
 export type QuizQuestion = z.infer<typeof quizQuestionSchema>;
+export type Flashcard = z.infer<typeof flashcardSchema>;
 export type GenerationRequest = z.infer<typeof generationRequestSchema>;

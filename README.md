@@ -19,6 +19,7 @@ QuizForge turns free-form study notes into a validated, interactive multiple-cho
 - Real Gemini integration through a server-only API route
 - Strict Zod validation on both request and response boundaries
 - Interactive quiz navigation, scoring, explanations, and retry-only-missed flow
+- AI-generated concept flashcards with flip, keyboard navigation, and a learn-before-quiz flow
 - Challenge questionable AI output and exclude it transparently from scoring
 - Validated local session recovery and keyboard shortcuts (`1–4`, arrow keys)
 - Development-only failure simulator for malformed, empty, timed-out, and failed responses
@@ -71,7 +72,7 @@ The [interview guide](docs/INTERVIEW_GUIDE.md) contains a 90-second recording sc
 
 ## Architecture and reliability
 
-The browser posts notes and quiz settings to `POST /api/generate-quiz`. The Express server validates the request, calls Gemini with JSON-schema response mode and a 60-second timeout, safely removes an optional JSON code fence, parses the response, and validates the result with Zod. The React UI only receives trusted quiz objects.
+The browser posts notes and quiz settings to `POST /api/generate-quiz`. The Express server validates the request, asks Gemini for concept flashcards and quiz questions in one JSON-schema response, enforces a 60-second timeout, safely removes an optional JSON code fence, parses the response, and validates the result with Zod. The React UI only receives trusted study data.
 
 Missing question IDs are the only semantic normalization because IDs do not affect answer correctness. The app refuses to guess missing answers, repair invalid indexes, or alter option content. Malformed, empty, or structurally invalid responses become retryable errors.
 

@@ -13,5 +13,5 @@ describe('quiz helpers', () => {
     expect(getIncorrectQuestions(questions, { a: 0, b: 0 }, challenges)).toHaveLength(0);
   });
   it('selects only incorrect answers', () => expect(getIncorrectQuestions(questions, { a: 0, b: 0 }).map((q) => q.id)).toEqual(['b']));
-  it('creates a retry without mutating the quiz', () => { const quiz = { title: 'Quiz', questions }; const retry = makeRetryQuiz(quiz, { a: 0, b: 0 }); expect(retry.questions).toHaveLength(1); expect(quiz.questions).toHaveLength(2); });
+  it('creates a retry without mutating the quiz', () => { const quiz = { title: 'Quiz', flashcards: [], questions }; const retry = makeRetryQuiz(quiz, { a: 0, b: 0 }); expect(retry.questions).toHaveLength(1); expect(quiz.questions).toHaveLength(2); });
 });

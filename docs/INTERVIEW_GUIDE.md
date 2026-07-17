@@ -4,10 +4,11 @@
 
 1. **0–10s — Problem:** “QuizForge turns unstructured notes into validated, interactive practice—not a chatbot.”
 2. **10–25s — Input:** Upload a `.txt` note file, choose difficulty, and generate with real Gemini.
-3. **25–45s — Interaction:** Answer with keys `1–4`, navigate with arrows, and challenge one ambiguous question.
-4. **45–60s — Results:** Show explanations, adjusted scoring, and retry only missed questions.
-5. **60–72s — Recovery:** Refresh and continue the locally saved session.
-6. **72–90s — Reliability:** Open **Test reliability**, simulate malformed output, and show that the notes remain available with a retry action.
+3. **25–35s — Learn:** Flip an AI-generated concept card and move into the quiz.
+4. **35–50s — Interaction:** Answer with keys `1–4`, navigate with arrows, and challenge one ambiguous question.
+5. **50–65s — Results:** Show explanations, adjusted scoring, and retry only missed questions.
+6. **65–75s — Recovery:** Refresh and continue the locally saved session.
+7. **75–90s — Reliability:** Open **Test reliability**, simulate malformed output, and show that the notes remain available with a retry action.
 
 Record once at desktop width and briefly resize to a phone viewport. Do not expose the API key or `.env` file.
 
